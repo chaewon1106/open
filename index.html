@@ -3,39 +3,249 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>자기소개 생성기</title>
+  <title>프로필 카드 생성기 Pro</title>
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
   <style>
-    :root{--bg:#0f1724;--card:#0b1220;--accent:#7c3aed;--glass:rgba(255,255,255,0.04);--muted:#9aa4b2}
+    :root{
+      --bg:#0f1724; --card:#1e293b; --accent:#8b5cf6; 
+      --glass:rgba(255,255,255,0.05); --border:rgba(255,255,255,0.08); 
+      --muted:#94a3b8; --text:#f1f5f9;
+    }
     *{box-sizing:border-box}
     body{
-      font-family:Inter,system-ui,"Noto Sans KR",sans-serif;
-      margin:0;
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:linear-gradient(180deg,#071027 0%, #071033 50%, #071026 100%);
-      color:#e6eef8;
+      font-family:-apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo", sans-serif;
+      margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+      background:radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f1724 100%);
+      color:var(--text);
     }
-    .wrap{width:min(920px,94%);padding:28px}
-    .grid{display:grid;grid-template-columns:1fr 380px;gap:20px}
-    @media(max-width:880px){.grid{grid-template-columns:1fr}}
+    .wrap{width:min(1000px,94%); padding:40px 20px;}
+    
+    header{margin-bottom:30px; text-align:center;}
+    header h1{font-size:28px; margin:0 0 8px; background:linear-gradient(to right, #c4b5fd, #8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent;}
+    header p{margin:0; color:var(--muted); font-size:15px;}
 
-    .card{
-      background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));
-      padding:18px;border-radius:14px;
-      box-shadow:0 6px 24px rgba(2,6,23,0.6);
+    .grid{display:grid; grid-template-columns:1fr 400px; gap:32px; align-items:start;}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+
+    /* Input Section */
+    .input-card{
+      background:var(--card); border:1px solid var(--border);
+      padding:24px; border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,0.2);
+    }
+    .form-group{margin-bottom:16px;}
+    label{font-size:13px; color:var(--muted); display:block; margin-bottom:6px; font-weight:600;}
+    .input-row{display:flex; gap:8px;}
+    
+    input, select{
+      width:100%; padding:12px; background:var(--glass);
+      border:1px solid var(--border); border-radius:8px;
+      color:inherit; font-size:14px; transition:0.2s;
+    }
+    input:focus, select:focus{outline:none; border-color:var(--accent); background:rgba(255,255,255,0.08);}
+    
+    button{
+      padding:0 16px; border-radius:8px; border:none; cursor:pointer; font-size:13px; font-weight:600;
+      transition:0.2s; white-space:nowrap;
+    }
+    .btn-rand{background:rgba(255,255,255,0.05); color:var(--muted); border:1px solid var(--border);}
+    .btn-rand:hover{background:rgba(255,255,255,0.1); color:white;}
+    
+    .btn-primary{
+      width:100%; padding:14px; margin-top:10px; font-size:16px;
+      background:linear-gradient(135deg, var(--accent), #6366f1);
+      color:white; box-shadow:0 4px 12px rgba(124, 58, 237, 0.3);
+    }
+    .btn-primary:hover{transform:translateY(-2px); box-shadow:0 6px 16px rgba(124, 58, 237, 0.4);}
+
+    /* Preview Section */
+    .preview-area{position:sticky; top:20px;}
+    
+    /* 실제 캡처될 카드 디자인 */
+    .id-card{
+      background:linear-gradient(160deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02));
+      border:1px solid rgba(255,255,255,0.15);
+      backdrop-filter:blur(20px);
+      padding:32px; border-radius:24px;
+      text-align:center; position:relative; overflow:hidden;
+      box-shadow:0 20px 50px rgba(0,0,0,0.5);
+      transition:0.3s ease;
+    }
+    /* 카드 배경 장식 */
+    .id-card::before{
+      content:''; position:absolute; top:-50%; left:-50%; width:200%; height:200%;
+      background:conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(139, 92, 246, 0.1) 60deg, transparent 120deg);
+      animation:rotate 10s linear infinite; pointer-events:none;
+    }
+    @keyframes rotate{100%{transform:rotate(360deg)}}
+
+    .card-content{position:relative; z-index:2;}
+    
+    .avatar-box{
+      width:100px; height:100px; margin:0 auto 20px;
+      border-radius:50%; background:linear-gradient(135deg, #e0e7ff, #c7d2fe);
+      display:flex; align-items:center; justify-content:center;
+      font-size:42px; font-weight:800; color:#312e81;
+      box-shadow:0 8px 24px rgba(0,0,0,0.3); border:4px solid rgba(255,255,255,0.1);
+    }
+    
+    .card-name{font-size:24px; font-weight:700; margin:0 0 4px; letter-spacing:-0.5px;}
+    .card-mbti{
+      display:inline-block; font-size:12px; font-weight:700; 
+      background:rgba(139, 92, 246, 0.2); color:#c4b5fd; 
+      padding:4px 10px; border-radius:20px; margin-bottom:16px;
+      border:1px solid rgba(139, 92, 246, 0.3);
+    }
+    
+    .card-tags{display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-bottom:24px;}
+    .tag{font-size:12px; color:#cbd5e1; background:rgba(255,255,255,0.05); padding:6px 12px; border-radius:8px;}
+
+    .card-desc{
+      background:rgba(0,0,0,0.2); padding:20px; border-radius:12px;
+      font-size:15px; line-height:1.6; color:#e2e8f0; text-align:left;
+      word-break:keep-all; border:1px solid rgba(255,255,255,0.05);
+    }
+
+    /* Action Buttons */
+    .actions{display:flex; gap:10px; margin-top:20px;}
+    .btn-action{
+      flex:1; padding:12px; background:var(--card); color:var(--muted);
+      border:1px solid var(--border); border-radius:8px; display:flex; align-items:center; justify-content:center; gap:6px;
+    }
+    .btn-action:hover{background:rgba(255,255,255,0.05); color:white;}
+
+    /* Empty State */
+    .empty-state{
+      padding:60px 20px; text-align:center; color:var(--muted);
+      border:2px dashed var(--border); border-radius:24px;
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>자기소개 생성기</h1>
-    <div class="grid">
-      <section class="card">입력 폼 자리</section>
-      <aside class="card">결과 미리보기 자리</aside>
-    </div>
-  </div>
-</body>
-</html>
 
+<div class="wrap">
+  <header>
+    <h1>✨ 프로필 카드 생성기</h1>
+    <p>나만의 감성으로 채운 자기소개 카드를 만들어보세요.</p>
+  </header>
+
+  <div class="grid">
+    <section class="input-card">
+      <form id="profileForm">
+        <div class="form-group">
+          <label>이름 / 닉네임</label>
+          <div class="input-row">
+            <input type="text" id="name" placeholder="홍길동" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>MBTI</label>
+          <div class="input-row">
+            <input type="text" id="mbti" placeholder="예: ENFP" style="text-transform:uppercase;">
+            <button type="button" class="btn-rand" onclick="setRand('mbti')">🎲</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>좋아하는 음식</label>
+          <div class="input-row">
+            <input type="text" id="food" placeholder="떡볶이, 파스타...">
+            <button type="button" class="btn-rand" onclick="setRand('food')">🎲</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>취미 / 관심사</label>
+          <div class="input-row">
+            <input type="text" id="hobby" placeholder="사진찍기, 코딩...">
+            <button type="button" class="btn-rand" onclick="setRand('hobby')">🎲</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>생성 분위기 (Tone)</label>
+          <select id="tone">
+            <option value="polite">차분하고 공손하게 (회사용)</option>
+            <option value="emoji">발랄하고 귀엽게 (SNS용)</option>
+            <option value="brief">시크하고 짧게 (개발자용)</option>
+            <option value="emotional">감성 한 스푼 (인스타용)</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn-primary">✨ 카드 생성하기</button>
+      </form>
+    </section>
+
+    <aside class="preview-area">
+      <div id="emptyState" class="empty-state">
+        <div style="font-size:40px; margin-bottom:10px;">👻</div>
+        <p>왼쪽 정보를 입력하면<br>여기에 카드가 나타납니다.</p>
+      </div>
+
+      <div id="resultContainer" style="display:none">
+        <div id="captureArea" class="id-card">
+          <div class="card-content">
+            <div class="avatar-box" id="rAvatar">H</div>
+            <h2 class="card-name" id="rName">홍길동</h2>
+            <span class="card-mbti" id="rMbti">ENFP</span>
+            
+            <div class="card-tags" id="rTags">
+              </div>
+
+            <div class="card-desc" id="rDesc">
+              자기소개 텍스트가 여기에 들어갑니다.
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn-action" id="copyBtn">📝 텍스트 복사</button>
+          <button class="btn-action" id="downloadBtn">💾 이미지 저장</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+  // 데이터 뱅크
+  const dataBank = {
+    mbti: ['ISTJ','ISFJ','INFJ','INTJ','ISTP','ISFP','INFP','INTP','ESTP','ESFP','ENFP','ENTP','ESTJ','ESFJ','ENFJ','ENTJ'],
+    foods: ['마라탕','평양냉면','민트초코','김치찌개','오마카세','치맥','샐러드','국밥'],
+    hobbies: ['유튜브 보기','맛집 탐방','코딩하기','헬스','누워있기','필름카메라','전시회 관람','게임']
+  };
+
+  const $ = id => document.getElementById(id);
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+  // 랜덤 버튼 핸들러
+  function setRand(type) {
+    const el = $(type);
+    if(type === 'mbti') el.value = pick(dataBank.mbti);
+    else if(type === 'food') el.value = pick(dataBank.foods);
+    else if(type === 'hobby') el.value = pick(dataBank.hobbies);
+  }
+
+  // 폼 제출
+  $('profileForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const info = {
+      name: $('name').value.trim(),
+      mbti: $('mbti').value.toUpperCase().trim() || 'SECRET',
+      food: $('food').value.trim() || '맛있는 것',
+      hobby: $('hobby').value.trim() || '숨쉬기',
+      tone: $('tone').value
+    };
+
+    renderCard(info);
+  });
+
+  // 카드 렌더링 함수
+  function renderCard(info) {
+    $('emptyState').style.display = 'none';
+    $('resultContainer').style.display = 'block';
+
+    // 기본 정보 바인딩
+    $('rAvatar').textContent = info.name.substring(0,1);
+    $('rName').textContent = info.name;
+    $('rMbti').textContent = info
